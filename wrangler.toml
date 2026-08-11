@@ -1,0 +1,9 @@
+name = "team-todo-hub"
+compatibility_date = "2026-07-30"
+pages_build_output_dir = "."
+
+# Cloudflare D1 Database Binding
+[[d1_databases]]
+binding = "DB"
+database_name = "team_todo_db"
+database_id = "e35fef0a-9ccf-413b-a4a3-d74db96d6326" # Will be generated when running: wrangler d1 create team_todo_db

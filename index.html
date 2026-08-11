@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Task Management Hub - ระบบจัดการและติดตามงานทีม</title>
+  <!-- Google Fonts: Prompt & Kanit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header / Navigation Bar -->
+    <header class="navbar">
+      <div class="nav-left">
+        <div class="logo">
+          <span class="logo-icon"><i data-lucide="kanban"></i></span>
+          <div class="logo-text">
+            <h1>TEAM WORKSPACE</h1>
+            <span class="logo-subtitle">ระบบจัดการและติดตามงานทีม</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-center">
+        <!-- View / Member Switcher Tabs -->
+        <div class="role-switcher" id="roleSwitcher">
+          <button class="role-btn active" data-view="manager" onclick="switchView('manager')">
+            <i data-lucide="crown" class="icon-manager"></i>
+            <span>ภาพรวมหัวหน้างาน</span>
+          </button>
+          <div class="divider"></div>
+          <button class="role-btn" data-view="member" data-member="TADA" onclick="switchView('member', 'TADA')">
+            <span class="avatar-badge avatar-tada">T</span>
+            <span>TADA</span>
+          </button>
+          <button class="role-btn" data-view="member" data-member="NON" onclick="switchView('member', 'NON')">
+            <span class="avatar-badge avatar-non">N</span>
+            <span>NON</span>
+          </button>
+          <button class="role-btn" data-view="member" data-member="BAS" onclick="switchView('member', 'BAS')">
+            <span class="avatar-badge avatar-bas">B</span>
+            <span>BAS</span>
+          </button>
+          <button class="role-btn" data-view="member" data-member="COM" onclick="switchView('member', 'COM')">
+            <span class="avatar-badge avatar-com">C</span>
+            <span>COM</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="nav-right">
+        <button class="btn btn-primary" onclick="openTaskModal()">
+          <i data-lucide="plus-circle"></i>
+          <span>สร้างงานใหม่</span>
+        </button>
+        <button class="btn btn-icon" id="themeToggle" onclick="toggleTheme()" title="สลับธีม สว่าง/มืด">
+          <i data-lucide="sun" id="themeIcon"></i>
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="resetDemoData()" title="รีเซ็ตข้อมูลตัวอย่าง">
+          <i data-lucide="rotate-ccw"></i>
+          <span>รีเซ็ตข้อมูล</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Filter Bar -->
+      <section class="filter-bar">
+        <div class="search-box">
+          <i data-lucide="search"></i>
+          <input type="text" id="searchInput" placeholder="ค้นหางาน หรือ รายละเอียด..." oninput="applyFilters()">
+        </div>
+
+        <div class="filter-group">
+          <!-- Category / Project Filter -->
+          <div class="filter-item">
+            <label for="categoryFilter"><i data-lucide="folder"></i> โครงการ:</label>
+            <select id="categoryFilter" onchange="applyFilters()">
+              <option value="all">ทั้งหมดทุกโครงการ</option>
+              <option value="Saveone Go">Saveone Go</option>
+              <option value="ขนมเปี๊ยะแม่ปู">ขนมเปี๊ยะแม่ปู</option>
+              <option value="บ้านๆกะปูปู้">บ้านๆกะปูปู้</option>
+              <option value="Miracle Card Game">Miracle Card Game</option>
+              <option value="งานบริษัท">งานบริษัท</option>
+              <option value="Topping Haus">Topping Haus</option>
+              <option value="Zathia">Zathia</option>
+              <option value="Harmony">Harmony</option>
+            </select>
+          </div>
+
+          <!-- Priority Filter -->
+          <div class="filter-item">
+            <label for="priorityFilter"><i data-lucide="flag"></i> ความสำคัญ:</label>
+            <select id="priorityFilter" onchange="applyFilters()">
+              <option value="all">ทุกระดับ</option>
+              <option value="high">🔴 สูง (High)</option>
+              <option value="medium">🟡 กลาง (Medium)</option>
+              <option value="low">🔵 ต่ำ (Low)</option>
+            </select>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="filter-item" id="statusFilterContainer">
+            <label for="statusFilter"><i data-lucide="list-checks"></i> สถานะ:</label>
+            <select id="statusFilter" onchange="applyFilters()">
+              <option value="all">ทุกสถานะ</option>
+              <option value="todo">📝 ต้องทำ (To Do)</option>
+              <option value="in_progress">⚡ กำลังทำ (In Progress)</option>
+              <option value="in_review">🔍 รอตรวจ (In Review)</option>
+              <option value="done">✅ เสร็จสิ้น (Done)</option>
+              <option value="overdue">🚨 เกินกำหนด (Overdue)</option>
+            </select>
+          </div>
+
+          <!-- Assignee Filter (Only in Manager View) -->
+          <div class="filter-item" id="assigneeFilterContainer">
+            <label for="assigneeFilter"><i data-lucide="users"></i> ผู้รับผิดชอบ:</label>
+            <select id="assigneeFilter" onchange="applyFilters()">
+              <option value="all">ทุกคนในทีม</option>
+              <option value="TADA">TADA</option>
+              <option value="NON">NON</option>
+              <option value="BAS">BAS</option>
+              <option value="COM">COM</option>
+            </select>
+          </div>
+
+          <!-- Clear Filters Button -->
+          <button class="btn btn-outline btn-sm" id="clearFiltersBtn" onclick="clearFilters()" title="ล้างตัวกรองทั้งหมด">
+            <i data-lucide="rotate-ccw"></i>
+            <span>ล้างตัวกรอง</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- VIEW 1: Manager Overview Page -->
+      <section id="managerView" class="view-section active">
+        <!-- Stat Overview Cards -->
+        <div class="stats-grid">
+          <div class="stat-card total">
+            <div class="stat-icon"><i data-lucide="layers"></i></div>
+            <div class="stat-info">
+              <span class="stat-label">งานทั้งหมด</span>
+              <h2 class="stat-value" id="statTotal">0</h2>
+            </div>
+          </div>
+          <div class="stat-card todo">
+            <div class="stat-icon"><i data-lucide="circle"></i></div>
+            <div class="stat-info">
+              <span class="stat-label">ต้องทำ (To Do)</span>
+              <h2 class="stat-value" id="statTodo">0</h2>
+            </div>
+          </div>
+          <div class="stat-card in-progress">
+            <div class="stat-icon"><i data-lucide="loader"></i></div>
+            <div class="stat-info">
+              <span class="stat-label">กำลังทำ (In Progress)</span>
+              <h2 class="stat-value" id="statInProgress">0</h2>
+            </div>
+          </div>
+          <div class="stat-card in-review">
+            <div class="stat-icon"><i data-lucide="clock"></i></div>
+            <div class="stat-info">
+              <span class="stat-label">รอตรวจ (In Review)</span>
+              <h2 class="stat-value" id="statInReview">0</h2>
+            </div>
+          </div>
+          <div class="stat-card done">
+            <div class="stat-icon"><i data-lucide="check-circle-2"></i></div>
+            <div class="stat-info">
+              <span class="stat-label">เสร็จสิ้น (Done)</span>
+              <h2 class="stat-value" id="statDone">0</h2>
+            </div>
+          </div>
+          <div class="stat-card overdue">
+            <div class="stat-icon"><i data-lucide="alert-triangle"></i></div>
+            <div class="stat-info">
+              <span class="stat-label">เกินกำหนด (Overdue)</span>
+              <h2 class="stat-value" id="statOverdue">0</h2>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team Workload Overview -->
+        <div class="section-block">
+          <div class="section-header">
+            <h3><i data-lucide="users"></i> ภาระงานและความคืบหน้าของทีมงานรายบุคคล (Team Workload)</h3>
+            <span class="section-desc">คลิกที่ทีมงานเพื่อเปิด Kanban Board ของคนนั้น</span>
+          </div>
+          <div class="member-cards-grid" id="memberWorkloadGrid">
+            <!-- Dynamically populated via JS -->
+          </div>
+        </div>
+
+        <!-- Project Overview Cards -->
+        <div class="section-block">
+          <div class="section-header">
+            <h3><i data-lucide="folder-kanban"></i> สัดส่วนงานแยกตามโครงการ (Projects Overview)</h3>
+          </div>
+          <div class="projects-grid" id="projectsGrid">
+            <!-- Dynamically populated via JS -->
+          </div>
+        </div>
+
+        <!-- Master Task Table / Global View -->
+        <div class="section-block">
+          <div class="section-header flex-between">
+            <h3><i data-lucide="table"></i> รายการงานทั้งหมดของทีม (Master Task List)</h3>
+            <div class="view-toggle-btns">
+              <button class="btn btn-sm btn-outline active" id="viewModeTableBtn" onclick="setManagerSubView('table')">
+                <i data-lucide="list"></i> ตาราง
+              </button>
+              <button class="btn btn-sm btn-outline" id="viewModeBoardBtn" onclick="setManagerSubView('board')">
+                <i data-lucide="kanban"></i> บอร์ดรวม
+              </button>
+            </div>
+          </div>
+
+          <!-- Table Subview -->
+          <div id="managerTableView" class="table-container">
+            <table class="master-table">
+              <thead>
+                <tr>
+                  <th>ชื่องาน / รายละเอียด</th>
+                  <th>โครงการ</th>
+                  <th>ผู้รับผิดชอบ</th>
+                  <th>ความสำคัญ</th>
+                  <th>เริ่มงาน</th>
+                  <th>กำหนดส่ง (Deadline)</th>
+                  <th>สถานะ</th>
+                  <th>จัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="masterTaskTableBody">
+                <!-- Dynamically populated via JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Global Board Subview -->
+          <div id="managerBoardView" class="kanban-board-container hidden">
+            <div class="kanban-board" id="globalKanbanBoard">
+              <!-- Dynamically populated columns -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: Member Kanban Board Page -->
+      <section id="memberView" class="view-section">
+        <div class="member-board-header">
+          <div class="member-info-card">
+            <div class="member-avatar-large" id="currentMemberAvatar">T</div>
+            <div class="member-meta">
+              <h2 id="currentMemberName">TADA</h2>
+              <p class="member-role-subtitle">กระดานงานส่วนบุคคล (Kanban Board)</p>
+            </div>
+          </div>
+          <div class="member-stats-summary" id="memberStatsSummary">
+            <!-- Stats pills populated via JS -->
+          </div>
+        </div>
+
+        <!-- Kanban Board -->
+        <div class="kanban-board-container">
+          <div class="kanban-board" id="memberKanbanBoard">
+            <!-- 4 Columns: To Do, In Progress, In Review, Done -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Task Modal (Create / Edit) -->
+    <div class="modal-backdrop" id="taskModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="modalTitle"><i data-lucide="plus-circle"></i> สร้างงานใหม่</h3>
+          <button class="btn-close" onclick="closeTaskModal()"><i data-lucide="x"></i></button>
+        </div>
+        <form id="taskForm" onsubmit="handleTaskSubmit(event)">
+          <input type="hidden" id="taskId">
+          
+          <div class="form-group">
+            <label for="taskTitle" class="required">ชื่องาน:</label>
+            <input type="text" id="taskTitle" required placeholder="เช่น ออกแบบ Banner โปรโมชั่น">
+          </div>
+
+          <div class="form-row">
+            <!-- Project Dropdown -->
+            <div class="form-group">
+              <label for="taskCategory" class="required">โครงการ (Category):</label>
+              <select id="taskCategory" required>
+                <option value="Saveone Go">Saveone Go</option>
+                <option value="ขนมเปี๊ยะแม่ปู">ขนมเปี๊ยะแม่ปู</option>
+                <option value="บ้านๆกะปูปู้">บ้านๆกะปูปู้</option>
+                <option value="Miracle Card Game">Miracle Card Game</option>
+                <option value="งานบริษัท">งานบริษัท</option>
+                <option value="Topping Haus">Topping Haus</option>
+                <option value="Zathia">Zathia</option>
+                <option value="Harmony">Harmony</option>
+              </select>
+            </div>
+
+            <!-- Assignee Dropdown -->
+            <div class="form-group">
+              <label for="taskAssignee" class="required">ผู้รับผิดชอบ (Assignee):</label>
+              <select id="taskAssignee" required>
+                <option value="TADA">TADA</option>
+                <option value="NON">NON</option>
+                <option value="BAS">BAS</option>
+                <option value="COM">COM</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <!-- Priority Dropdown -->
+            <div class="form-group">
+              <label for="taskPriority" class="required">ความสำคัญ (Priority):</label>
+              <select id="taskPriority" required>
+                <option value="high">🔴 สูง (High)</option>
+                <option value="medium" selected>🟡 กลาง (Medium)</option>
+                <option value="low">🔵 ต่ำ (Low)</option>
+              </select>
+            </div>
+
+            <!-- Status Dropdown -->
+            <div class="form-group">
+              <label for="taskStatus" class="required">สถานะงาน (Status):</label>
+              <select id="taskStatus" required>
+                <option value="todo">📝 ต้องทำ (To Do)</option>
+                <option value="in_progress">⚡ กำลังทำ (In Progress)</option>
+                <option value="in_review">🔍 รอตรวจ (In Review)</option>
+                <option value="done">✅ เสร็จสิ้น (Done)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <!-- Start Date -->
+            <div class="form-group">
+              <label for="taskStartDate">วันที่เริ่มงาน:</label>
+              <input type="date" id="taskStartDate">
+            </div>
+
+            <!-- Deadline -->
+            <div class="form-group">
+              <label for="taskDeadline" class="required">วันกำหนดส่ง (Deadline):</label>
+              <input type="date" id="taskDeadline" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="taskDescription">รายละเอียดงาน:</label>
+            <textarea id="taskDescription" rows="4" placeholder="ระบุรายละเอียด ข้อกำหนด หรือลิงก์งานที่เกี่ยวข้อง..."></textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeTaskModal()">ยกเลิก</button>
+            <button type="submit" class="btn btn-primary"><i data-lucide="check"></i> บันทึกงาน</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Task Detail View Modal -->
+    <div class="modal-backdrop" id="detailModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3><i data-lucide="file-text"></i> รายละเอียดงาน</h3>
+          <button class="btn-close" onclick="closeDetailModal()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body" id="detailModalBody">
+          <!-- Populated dynamically via JS -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeDetailModal()">ปิด</button>
+          <button type="button" class="btn btn-primary" id="editFromDetailBtn"><i data-lucide="edit"></i> แก้ไขงานนี้</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
